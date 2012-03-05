@@ -2,7 +2,6 @@ package com.alibaba.simpletopology.entity;
 
 import java.awt.Dimension;
 
-import org.eclipse.draw2d.PositionConstants;
 import org.eclipse.draw2d.geometry.Insets;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.PointList;
