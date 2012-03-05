@@ -2,12 +2,12 @@ package com.alibaba.simpletopology.entity;
 
 import java.awt.Dimension;
 
-import org.eclipse.draw2d.geometry.Insets;
-import org.eclipse.draw2d.geometry.Point;
-import org.eclipse.draw2d.geometry.PointList;
-import org.eclipse.draw2d.graph.DirectedGraph;
-import org.eclipse.draw2d.graph.DirectedGraphLayout;
-import org.eclipse.draw2d.graph.Edge;
+import com.alibaba.simpletopology.draw2d.geometry.Insets;
+import com.alibaba.simpletopology.draw2d.geometry.Point;
+import com.alibaba.simpletopology.draw2d.geometry.PointList;
+import com.alibaba.simpletopology.draw2d.graph.DirectedGraph;
+import com.alibaba.simpletopology.draw2d.graph.DirectedGraphLayout;
+import com.alibaba.simpletopology.draw2d.graph.Edge;
 
 public class TopoDirectedGraph extends TopoGraph {
 
@@ -16,7 +16,7 @@ public class TopoDirectedGraph extends TopoGraph {
     @SuppressWarnings("unchecked")
     public void coordinateGenerate(Dimension dimension) {
         for (TopoNode node : nodes.values()) {
-            org.eclipse.draw2d.graph.Node n = new org.eclipse.draw2d.graph.Node(node);
+            com.alibaba.simpletopology.draw2d.graph.Node n = new com.alibaba.simpletopology.draw2d.graph.Node(node);
             n.width = node.getWidth();
             n.height = node.getHeight();
             n.setPadding(new Insets(10, 8, 10, 12));
@@ -25,8 +25,8 @@ public class TopoDirectedGraph extends TopoGraph {
 
         }
         for (TopoRelationship ship : relationships) {
-            org.eclipse.draw2d.graph.Node source = nodeMap.get(nodes.get(ship.getFromId()));
-            org.eclipse.draw2d.graph.Node target = nodeMap.get(nodes.get(ship.getToId()));
+            com.alibaba.simpletopology.draw2d.graph.Node source = nodeMap.get(nodes.get(ship.getFromId()));
+            com.alibaba.simpletopology.draw2d.graph.Node target = nodeMap.get(nodes.get(ship.getToId()));
             Edge e = new Edge(ship, source, target);
             e.weight = 1;
             dg.edges.add(e);
@@ -34,7 +34,7 @@ public class TopoDirectedGraph extends TopoGraph {
         }
         new DirectedGraphLayout().visit(dg);
         for (TopoNode node : nodes.values()) {
-            org.eclipse.draw2d.graph.Node n = nodeMap.get(node);
+            com.alibaba.simpletopology.draw2d.graph.Node n = nodeMap.get(node);
             node.setX(n.x);
             node.setY(n.y);
             node.setWidth(n.width);

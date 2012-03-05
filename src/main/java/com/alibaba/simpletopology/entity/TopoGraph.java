@@ -15,12 +15,12 @@ import org.apache.batik.dom.svg.SAXSVGDocumentFactory;
 import org.apache.batik.dom.util.DOMUtilities;
 import org.apache.batik.svggen.SVGGraphics2D;
 import org.apache.batik.util.XMLResourceDescriptor;
-import org.eclipse.draw2d.graph.Edge;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import com.alibaba.simpletopology.draw2d.graph.Edge;
 import com.alibaba.simpletopology.entity.dubbo.DubboTopoGraph;
 
 /** 拓扑图基类
@@ -32,7 +32,7 @@ import com.alibaba.simpletopology.entity.dubbo.DubboTopoGraph;
 public abstract class TopoGraph {
     
     
-    protected Map<TopoNode, org.eclipse.draw2d.graph.Node> nodeMap     = new HashMap<TopoNode, org.eclipse.draw2d.graph.Node>();
+    protected Map<TopoNode, com.alibaba.simpletopology.draw2d.graph.Node> nodeMap     = new HashMap<TopoNode, com.alibaba.simpletopology.draw2d.graph.Node>();
     protected Map<TopoRelationship, Edge>                  relationMap = new HashMap<TopoRelationship, Edge>();
 
     protected String                 title;
