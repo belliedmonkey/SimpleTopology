@@ -5,9 +5,13 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.apache.batik.dom.svg.SAXSVGDocumentFactory;
-import org.apache.batik.util.XMLResourceDescriptor;
 import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
 import com.alibaba.simpletopology.entity.TopoDirectedGraph;
 
@@ -29,14 +33,15 @@ public class DubboTopoGraph extends TopoDirectedGraph {
 
     static {
         try {
-            String parser = XMLResourceDescriptor.getXMLParserClassName();
-            SAXSVGDocumentFactory f = new SAXSVGDocumentFactory(parser);
-            InputStream is = DubboTopoGraph.class.getClassLoader().getResourceAsStream(
+           
+            InputStream ci_uri = DubboTopoGraph.class.getClassLoader().getResourceAsStream(
                     CI_TEMPLATE_URI);
-            ciDocTemp = f.createSVGDocument(parser, is);
-            consumerDocTemp = f.createSVGDocument(parser, DubboTopoGraph.class.getClassLoader()
+            DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dbuilder =  docFactory.newDocumentBuilder();
+            ciDocTemp = dbuilder.parse(ci_uri);
+            consumerDocTemp = dbuilder.parse(DubboTopoGraph.class.getClassLoader()
                     .getResourceAsStream(CONSUMER_TEMPLATE_URI));
-            providerDocTemp = f.createSVGDocument(parser, DubboTopoGraph.class.getClassLoader()
+            providerDocTemp = dbuilder.parse( DubboTopoGraph.class.getClassLoader()
                     .getResourceAsStream(PROVIDER_TEMPLATE_URI));
             nodeTempMap.put(DUBBO_NODE_TYPE.PROVIDER, providerDocTemp);
             nodeTempMap.put(DUBBO_NODE_TYPE.CONSUMER, consumerDocTemp);
@@ -44,6 +49,12 @@ public class DubboTopoGraph extends TopoDirectedGraph {
 
         } catch (IOException ex) {
             ex.printStackTrace();
+        } catch (SAXException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (ParserConfigurationException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
     }
 

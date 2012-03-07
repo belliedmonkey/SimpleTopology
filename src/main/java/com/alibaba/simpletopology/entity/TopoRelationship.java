@@ -3,9 +3,13 @@ package com.alibaba.simpletopology.entity;
 import java.io.IOException;
 import java.io.InputStream;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.apache.batik.dom.svg.SAXSVGDocumentFactory;
-import org.apache.batik.util.XMLResourceDescriptor;
 import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
 import com.alibaba.simpletopology.entity.dubbo.DubboTopoGraph;
 
@@ -33,16 +37,26 @@ public class TopoRelationship {
 
     private static final String DOC_TEMPLATE_URI = "dubbo.provider/relationship.svg";
     static {
-    String parser = XMLResourceDescriptor.getXMLParserClassName();
-    SAXSVGDocumentFactory f = new SAXSVGDocumentFactory(parser);
-    InputStream is = DubboTopoGraph.class.getClassLoader().getResourceAsStream(
-            DOC_TEMPLATE_URI);
-    try {
-        graphTemplate = f.createSVGDocument(parser, is);
-    } catch (IOException e) {
-        e.printStackTrace();
+        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dbuilder;
+        try {
+            dbuilder = docFactory.newDocumentBuilder();
+
+            InputStream is = DubboTopoGraph.class.getClassLoader().getResourceAsStream(
+                    DOC_TEMPLATE_URI);
+
+            graphTemplate = dbuilder.parse(is);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ParserConfigurationException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (SAXException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
-    }
+
     public Document getBounds() {
         return bounds;
     }

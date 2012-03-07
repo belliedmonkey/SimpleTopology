@@ -9,15 +9,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.batik.dom.svg.SAXSVGDocumentFactory;
-import org.apache.batik.dom.util.DOMUtilities;
-import org.apache.batik.util.XMLResourceDescriptor;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-import sun.rmi.runtime.Log;
-
+import com.alibaba.simpletopology.batik.DOMUtilities;
 import com.alibaba.simpletopology.draw2d.graph.Edge;
 import com.alibaba.simpletopology.entity.dubbo.DubboTopoGraph;
 
@@ -197,11 +196,11 @@ public abstract class TopoGraph {
     }
 
     public String toSVG() throws Exception {
-        String parser = XMLResourceDescriptor.getXMLParserClassName();
-        SAXSVGDocumentFactory f = new SAXSVGDocumentFactory(parser);
         InputStream is = DubboTopoGraph.class.getClassLoader()
                 .getResourceAsStream(DOC_TEMPLATE_URI);
-        Document doc = f.createSVGDocument(parser, is);
+        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dbuilder =  docFactory.newDocumentBuilder();
+        Document doc = dbuilder.parse(is);
         return paint(doc);
     }
 
