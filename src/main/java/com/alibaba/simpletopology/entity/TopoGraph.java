@@ -1,6 +1,5 @@
 package com.alibaba.simpletopology.entity;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -10,44 +9,42 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.batik.dom.GenericDOMImplementation;
 import org.apache.batik.dom.svg.SAXSVGDocumentFactory;
 import org.apache.batik.dom.util.DOMUtilities;
-import org.apache.batik.svggen.SVGGraphics2D;
 import org.apache.batik.util.XMLResourceDescriptor;
-import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import sun.rmi.runtime.Log;
+
 import com.alibaba.simpletopology.draw2d.graph.Edge;
 import com.alibaba.simpletopology.entity.dubbo.DubboTopoGraph;
 
-/** 拓扑图基类
+/**
+ * 拓扑图基类 TODO 拓扑图抽象
  * 
- * TODO 拓扑图抽象
  * @author chris
- *
  */
 public abstract class TopoGraph {
-    
-    
-    protected Map<TopoNode, com.alibaba.simpletopology.draw2d.graph.Node> nodeMap     = new HashMap<TopoNode, com.alibaba.simpletopology.draw2d.graph.Node>();
-    protected Map<TopoRelationship, Edge>                  relationMap = new HashMap<TopoRelationship, Edge>();
 
-    protected String                 title;
 
-    protected String                 desc;
+    protected Map<TopoNode,com.alibaba.simpletopology.draw2d.graph.Node> nodeMap          = new HashMap<TopoNode, com.alibaba.simpletopology.draw2d.graph.Node>();
+    protected Map<TopoRelationship, Edge>                  relationMap      = new HashMap<TopoRelationship, Edge>();
 
-    protected int                    width;
+    protected String                                       title;
 
-    protected int                    height;
+    protected String                                       desc;
 
-    protected Map<Long, TopoNode>    nodes;
+    protected int                                          width;
 
-    protected List<TopoRelationship> relationships;
+    protected int                                          height;
 
-    private static final String      DOC_TEMPLATE_URI = "dubbo.provider/dubbotopo.svg";
+    protected Map<Long, TopoNode>                          nodes;
+
+    protected List<TopoRelationship>                       relationships;
+
+    private static final String                            DOC_TEMPLATE_URI = "dubbo.provider/dubbotopo.svg";
 
     protected TopoGraph() {
         this.nodes = new HashMap<Long, TopoNode>();
@@ -70,9 +67,10 @@ public abstract class TopoGraph {
         this.desc = desc;
     }
 
-    public long addNode(TopoNode node) {
+    public synchronized long addNode(TopoNode node) {
         long id = nodes.size();
         nodes.put(id, node);
+        node.setNodeId(id);
         return id;
     }
 
@@ -82,22 +80,21 @@ public abstract class TopoGraph {
 
     protected void renderData() {
         for (TopoNode node : nodes.values()) {
+            
             Map<String, Object> meta = node.metaMap;
             for (Map.Entry<String, Object> entry : meta.entrySet()) {
                 Element e = node.bounds.getElementById(entry.getKey());
                 if (e != null) {
                     e.setTextContent((String) entry.getValue());
                 } else {
-                    //TODO 记录日志
+//                    LOG.warn("error node meta  entryKey=" + entry.getKey() + ", entryValue="
+//                            + entry.getValue());
                 }
             }
         }
     }
- 
 
     public abstract void coordinateGenerate(Dimension dimension);
-
-    
 
     public class TopoNode {
 
@@ -202,14 +199,19 @@ public abstract class TopoGraph {
     public String toSVG() throws Exception {
         String parser = XMLResourceDescriptor.getXMLParserClassName();
         SAXSVGDocumentFactory f = new SAXSVGDocumentFactory(parser);
-        InputStream is = DubboTopoGraph.class.getClassLoader().getResourceAsStream(DOC_TEMPLATE_URI);
+        InputStream is = DubboTopoGraph.class.getClassLoader()
+                .getResourceAsStream(DOC_TEMPLATE_URI);
         Document doc = f.createSVGDocument(parser, is);
         return paint(doc);
     }
 
     private void appendNodeToDocument(Document document, Element bizNode, TopoNode node) {
+        
         Node gg = document.importNode(bizNode, true);
         Element g = document.createElement("g");
+        g.setAttribute("id", new Long(node.getNodeId()).toString());
+        g.setAttribute("width", new Integer(node.getWidth()).toString());
+        g.setAttribute("height", new Integer(node.getHeight()).toString());
         g.appendChild(gg);
         document.getDocumentElement().appendChild(g);
         setNodeCoodinate(node, g);
@@ -226,27 +228,21 @@ public abstract class TopoGraph {
         renderData();
         for (TopoNode node : nodes.values()) {
             Element g = node.getBounds().getDocumentElement();
+            
             appendNodeToDocument(document, g, node);
         }
-
-        DOMImplementation domImpl = GenericDOMImplementation.getDOMImplementation();
-
-        // Create an instance of org.w3c.dom.Document.
-        String svgNS = "http://www.w3.org/2000/svg";
-        Document lineDocument = domImpl.createDocument(svgNS, "svg", null);
-
-        // Create an instance of the SVG Generator.
-        SVGGraphics2D svgGenerator = new SVGGraphics2D(lineDocument);
-
-        for (TopoRelationship relationship : relationships) {
-
-            svgGenerator.setPaint(Color.black);
-            svgGenerator.drawLine(relationship.getX1(), relationship.getY1(), relationship.getX2(),
-                    relationship.getY2());
+        for (TopoRelationship ship : relationships) {
+            Document doc = ship.getBounds();
+            Element e = (Element) doc.getDocumentElement().getElementsByTagName("line").item(0);
+            e.setAttribute("x1", new Integer(ship.getX1()).toString());
+            e.setAttribute("y1", new Integer(ship.getY1()).toString());
+            e.setAttribute("x2", new Integer(ship.getX2()).toString());
+            e.setAttribute("y2", new Integer(ship.getY2()).toString());
+            e.setAttribute("source", new Long(ship.getFromId()).toString());
+            e.setAttribute("target", new Long(ship.getToId()).toString());
+            Node line = document.importNode(e, true);
+            document.getDocumentElement().appendChild(line);
         }
-        Element root = svgGenerator.getRoot();
-        Node line = document.importNode(root, true);
-        document.getDocumentElement().appendChild(line);
         StringWriter sWriter = new StringWriter();
         Writer out = sWriter;
         DOMUtilities.writeDocument(document, sWriter);

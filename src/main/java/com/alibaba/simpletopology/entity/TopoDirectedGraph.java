@@ -2,6 +2,7 @@ package com.alibaba.simpletopology.entity;
 
 import java.awt.Dimension;
 
+import com.alibaba.simpletopology.draw2d.PositionConstants;
 import com.alibaba.simpletopology.draw2d.geometry.Insets;
 import com.alibaba.simpletopology.draw2d.geometry.Point;
 import com.alibaba.simpletopology.draw2d.geometry.PointList;
@@ -9,12 +10,16 @@ import com.alibaba.simpletopology.draw2d.graph.DirectedGraph;
 import com.alibaba.simpletopology.draw2d.graph.DirectedGraphLayout;
 import com.alibaba.simpletopology.draw2d.graph.Edge;
 
+
+
 public class TopoDirectedGraph extends TopoGraph {
 
     private DirectedGraph dg = new DirectedGraph();
 
+    @Override
     @SuppressWarnings("unchecked")
     public void coordinateGenerate(Dimension dimension) {
+        dg.setDirection(PositionConstants.RIGHT);
         for (TopoNode node : nodes.values()) {
             com.alibaba.simpletopology.draw2d.graph.Node n = new com.alibaba.simpletopology.draw2d.graph.Node(node);
             n.width = node.getWidth();

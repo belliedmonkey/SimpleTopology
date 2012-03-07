@@ -1,40 +1,0 @@
-10
-
-dir
-147133
-http://svn.alibaba-inc.com/repos/ali_platform/dragoon25/app/trunk/dragoon-web/src/main/webapp/extjs3/adapter
-http://svn.alibaba-inc.com/repos/ali_platform
-
-
-
-2011-10-30T07:43:23.127415Z
-120768
-yidong.zhuangyd
-
-
-svn:special svn:externals svn:needs-lock
-
-
-
-
-
-
-
-
-
-
-
-766b8ed6-8c02-485e-ac38-e4d67e22fedb
-
-ext
-dir
-
-jquery
-dir
-
-prototype
-dir
-
-yui
-dir
-

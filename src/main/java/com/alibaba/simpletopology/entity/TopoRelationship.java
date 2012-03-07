@@ -1,24 +1,58 @@
 package com.alibaba.simpletopology.entity;
 
+import java.io.IOException;
+import java.io.InputStream;
+
+import org.apache.batik.dom.svg.SAXSVGDocumentFactory;
+import org.apache.batik.util.XMLResourceDescriptor;
+import org.w3c.dom.Document;
+
+import com.alibaba.simpletopology.entity.dubbo.DubboTopoGraph;
+
 public class TopoRelationship {
 
-    private String title;
+    private String              title;
 
-    private long   fromId;
+    private long                fromId;
 
-    private long   toId;
+    private long                toId;
 
-    private int    x1;
+    private int                 x1;
 
-    private int    x2;
+    private int                 x2;
 
-    private int    y1;
+    private int                 y1;
 
-    private int    y2;
+    private int                 y2;
 
-    private int    lineType;
+    private int                 lineType;
+
+    private Document            bounds;
+
+    private static Document     graphTemplate;
+
+    private static final String DOC_TEMPLATE_URI = "dubbo.provider/relationship.svg";
+    static {
+    String parser = XMLResourceDescriptor.getXMLParserClassName();
+    SAXSVGDocumentFactory f = new SAXSVGDocumentFactory(parser);
+    InputStream is = DubboTopoGraph.class.getClassLoader().getResourceAsStream(
+            DOC_TEMPLATE_URI);
+    try {
+        graphTemplate = f.createSVGDocument(parser, is);
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+    }
+    public Document getBounds() {
+        return bounds;
+    }
+
+    public void setBounds(Document bounds) {
+        this.bounds = bounds;
+    }
 
     public TopoRelationship(long id1, long id11) {
+        this.bounds = (Document) graphTemplate.cloneNode(true);
         this.fromId = id1;
         this.toId = id11;
     }
