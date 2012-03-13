@@ -168,6 +168,9 @@ public class DOMUtilities extends XMLUtilities {
      * characters with entities.
      */
     public static String contentToString(String s) {
+        if (s == null) {
+            return "";
+        }
         StringBuffer result = new StringBuffer( s.length() );
 
         for (int i = 0; i < s.length(); i++) {

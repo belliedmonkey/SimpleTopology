@@ -1,18 +1,16 @@
-<?xml version="1.0" encoding="utf-8" standalone="no"?>
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11-flat-20030114.dtd">
-<!-- Created by SVGDeveloper 1.0 -->
-<svg width="130" height="80" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-	<rect x="0" y="0" width="130" height="80" fill="#FFFFFF" stroke="#000000"></rect>
-	<text id="appNum" x="14" y="23" xml:space="preserve" font-size="12" fill="#FFFFFF" stroke="#000000">
+<svg onload="resizeText()" width="130" height="80" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">	
+	<rect  fill="#abdefe" rx="8" x="0" y="0" width="130" height="80"></rect>
+	<text MaxLength="18" id="appNum" x="14" y="23" font-weight="bold" fill="#414141" font-family="arial" font-size="12">
 	Dragoon-Master</text>
-	<text x="15" y="43" xml:space="preserve" font-family="Arial" font-size="10" fill="#FFFFFF" stroke="#000000" baseline-shift="baseline">
+	<text MaxLength="15" x="15" y="43" font-weight="bold" fill="#414141" font-family="arial" font-size="12">
 	Invoke</text>
-	<text id="InvokeCount" x="70" y="43" xml:space="preserve" font-family="Arial" font-size="10" fill="#FFFFFF" stroke="#000000" baseline-shift="baseline">
+	<text MaxLength="15" id="InvokeCount" x="70" y="43" font-weight="bold" fill="#414141" font-family="arial" font-size="12">
 	20000</text>
-	<text x="15" y="64" xml:space="preserve" font-family="Arial" font-size="10" fill="#FFFFFF" stroke="#000000" baseline-shift="baseline">
+	<text MaxLength="15" x="15" y="64" font-weight="bold" fill="#414141" font-family="arial" font-size="12">
 	Running</text>
-	<text id="RunningCount" x="70" y="64" xml:space="preserve" font-family="Arial" font-size="10" fill="#FFFFFF" stroke="#000000" baseline-shift="baseline">
+	<text MaxLength="15" id="RunningCount" x="70" y="64" font-weight="bold" fill="#414141" font-family="arial" font-size="12">
 	200000</text>
-	
 	
 </svg>

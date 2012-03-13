@@ -65,7 +65,11 @@ public class TopoRelationship {
     }
 
     public TopoRelationship(long id1, long id11) {
-        this.bounds = (Document) graphTemplate.cloneNode(true);
+        try {
+            this.bounds = (Document) graphTemplate.cloneNode(true);
+        } catch (Exception e) {
+           
+        }
         this.fromId = id1;
         this.toId = id11;
     }

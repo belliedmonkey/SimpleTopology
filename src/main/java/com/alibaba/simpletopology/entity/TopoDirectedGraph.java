@@ -2,6 +2,8 @@ package com.alibaba.simpletopology.entity;
 
 import java.awt.Dimension;
 
+import org.w3c.dom.Document;
+
 import com.alibaba.simpletopology.draw2d.PositionConstants;
 import com.alibaba.simpletopology.draw2d.geometry.Insets;
 import com.alibaba.simpletopology.draw2d.geometry.Point;
@@ -18,7 +20,7 @@ public class TopoDirectedGraph extends TopoGraph {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void coordinateGenerate(Dimension dimension) {
+    public void coordinateGenerate(Document document) {
         dg.setDirection(PositionConstants.RIGHT);
         for (TopoNode node : nodes.values()) {
             com.alibaba.simpletopology.draw2d.graph.Node n = new com.alibaba.simpletopology.draw2d.graph.Node(node);
@@ -38,6 +40,7 @@ public class TopoDirectedGraph extends TopoGraph {
             relationMap.put(ship, e);
         }
         new DirectedGraphLayout().visit(dg);
+        
         for (TopoNode node : nodes.values()) {
             com.alibaba.simpletopology.draw2d.graph.Node n = nodeMap.get(node);
             node.setX(n.x);
@@ -55,5 +58,17 @@ public class TopoDirectedGraph extends TopoGraph {
             ship.setX2(last.x);
             ship.setY2(last.y);
         }
+        document.getDocumentElement().setAttribute("width", ""+dg.size.width);
+        document.getDocumentElement().setAttribute("height", ""+dg.size.height);
     }
+
+    public DirectedGraph getDg() {
+        return dg;
+    }
+
+    public void setDg(DirectedGraph dg) {
+        this.dg = dg;
+    }
+    
+    
 }

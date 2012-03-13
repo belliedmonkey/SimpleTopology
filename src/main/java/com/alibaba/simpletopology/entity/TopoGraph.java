@@ -1,6 +1,5 @@
 package com.alibaba.simpletopology.entity;
 
-import java.awt.Dimension;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -12,6 +11,7 @@ import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.apache.commons.logging.Log;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -27,23 +27,42 @@ import com.alibaba.simpletopology.entity.dubbo.DubboTopoGraph;
  */
 public abstract class TopoGraph {
 
+    private static final Log                                              LOG              = org.apache.commons.logging.LogFactory
+                                                                                                   .getLog(TopoGraph.class);
 
-    protected Map<TopoNode,com.alibaba.simpletopology.draw2d.graph.Node> nodeMap          = new HashMap<TopoNode, com.alibaba.simpletopology.draw2d.graph.Node>();
-    protected Map<TopoRelationship, Edge>                  relationMap      = new HashMap<TopoRelationship, Edge>();
+    protected Map<TopoNode, com.alibaba.simpletopology.draw2d.graph.Node> nodeMap          = new HashMap<TopoNode, com.alibaba.simpletopology.draw2d.graph.Node>();
+    protected Map<TopoRelationship, Edge>                                 relationMap      = new HashMap<TopoRelationship, Edge>();
 
-    protected String                                       title;
+    protected String                                                      title;
 
-    protected String                                       desc;
+    protected String                                                      desc;
 
-    protected int                                          width;
+    protected int                                                         width;
 
-    protected int                                          height;
+    protected int                                                         height;
 
-    protected Map<Long, TopoNode>                          nodes;
+    protected Map<Long, TopoNode>                                         nodes;
 
-    protected List<TopoRelationship>                       relationships;
+    protected List<TopoRelationship>                                      relationships;
 
-    private static final String                            DOC_TEMPLATE_URI = "dubbo.provider/dubbotopo.svg";
+    private static final String                                           DOC_TEMPLATE_URI = "dubbo.provider/dubbotopo.svg";
+
+    private static Document                                               docTemp;
+
+    static {
+        try {
+            InputStream is = DubboTopoGraph.class.getClassLoader().getResourceAsStream(
+                    DOC_TEMPLATE_URI);
+            DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance(
+                    "com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl",
+                    TopoGraph.class.getClassLoader());
+            DocumentBuilder dbuilder = docFactory.newDocumentBuilder();
+            docTemp = dbuilder.parse(is);
+            is.close();
+        } catch (Exception e) {
+            LOG.error("parse error", e);
+        }
+    }
 
     protected TopoGraph() {
         this.nodes = new HashMap<Long, TopoNode>();
@@ -79,46 +98,74 @@ public abstract class TopoGraph {
 
     protected void renderData() {
         for (TopoNode node : nodes.values()) {
-            
-            Map<String, Object> meta = node.metaMap;
-            for (Map.Entry<String, Object> entry : meta.entrySet()) {
-                Element e = node.bounds.getElementById(entry.getKey());
-                if (e != null) {
-                    e.setTextContent((String) entry.getValue());
-                } else {
-//                    LOG.warn("error node meta  entryKey=" + entry.getKey() + ", entryValue="
-//                            + entry.getValue());
+            try {
+
+                Map<String, Object> meta = node.metaMap;
+                for (Map.Entry<String, Object> entry : meta.entrySet()) {
+                    Element e = node.bounds.getElementById(entry.getKey());
+                    if (e != null) {
+                        e.setTextContent((String) entry.getValue());
+                    } else {
+                        LOG.warn("error node meta  entryKey=" + entry.getKey() + ", entryValue="
+                                + entry.getValue());
+                    }
                 }
+
+            } catch (Exception e) {
+                LOG.error(node, e);
             }
         }
     }
 
-    public abstract void coordinateGenerate(Dimension dimension);
+    public abstract void coordinateGenerate(Document document);
 
     public class TopoNode {
 
-        private Long                nodeId;
+        private Long         nodeId;
 
-        private String              title;
+        private String       title;
 
-        private String              desc;
+        private String       desc;
 
-        private int                 width;
+        private List<String> tipList = new ArrayList<String>();
 
-        private int                 height;
+        private int          width;
 
-        private int                 x;
+        private int          height;
 
-        private int                 y;
+        private int          x;
+
+        private int          y;
+
+        @Override
+        public String toString() {
+            return "TopoNode [nodeId=" + nodeId + ", title=" + title + ", desc=" + desc
+                    + ", width=" + width + ", height=" + height + ", x=" + x + ", y=" + y
+                    + ", metaMap=" + metaMap + ", bounds=" + bounds + "]";
+        }
 
         private Map<String, Object> metaMap = new HashMap<String, Object>();
 
         private Document            bounds;
 
         public TopoNode(Document bounds) {
-            this.bounds = (Document) bounds.cloneNode(true);
-            this.width = Integer.parseInt(this.bounds.getDocumentElement().getAttribute("width"));
-            this.height = Integer.parseInt(this.bounds.getDocumentElement().getAttribute("height"));
+
+            try {
+                this.bounds = (Document) bounds.cloneNode(true);
+            } catch (Exception e) {
+                return;
+            }
+
+            String width = this.bounds.getDocumentElement().getAttribute("width");
+            String height = this.bounds.getDocumentElement().getAttribute("height");
+            if (width != null && height != null) {
+                this.width = Integer.parseInt(width);
+                this.height = Integer.parseInt(height);
+            }
+        }
+
+        public void appendTips(String e) {
+            tipList.add(e);
         }
 
         public Long getNodeId() {
@@ -196,16 +243,17 @@ public abstract class TopoGraph {
     }
 
     public String toSVG() throws Exception {
-        InputStream is = DubboTopoGraph.class.getClassLoader()
-                .getResourceAsStream(DOC_TEMPLATE_URI);
-        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder dbuilder =  docFactory.newDocumentBuilder();
-        Document doc = dbuilder.parse(is);
+        Document doc = null;
+        try {
+            doc = (Document) docTemp.cloneNode(true);
+        } catch (Exception e) {
+
+        }
         return paint(doc);
     }
 
     private void appendNodeToDocument(Document document, Element bizNode, TopoNode node) {
-        
+
         Node gg = document.importNode(bizNode, true);
         Element g = document.createElement("g");
         g.setAttribute("id", new Long(node.getNodeId()).toString());
@@ -223,11 +271,24 @@ public abstract class TopoGraph {
     }
 
     public String paint(Document document) throws Exception {
-        coordinateGenerate(new Dimension(1440, 900));
+        coordinateGenerate(document);
+
         renderData();
         for (TopoNode node : nodes.values()) {
             Element g = node.getBounds().getDocumentElement();
-            
+            boolean flag = false;
+            String tips = "";
+            for (String tip : node.tipList) {
+                if (!flag) {
+                    tips += tip;
+                    flag = true;
+                } else {
+                    tips += "%%" + tip;
+                }
+            }
+            if (!tips.trim().isEmpty()) {
+                g.setAttribute("node_detail", tips);
+            }
             appendNodeToDocument(document, g, node);
         }
         for (TopoRelationship ship : relationships) {

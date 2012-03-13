@@ -58,7 +58,7 @@ public class DirectedGraph {
 	int[][] cellLocations;
 	int tensorStrength;
 	int tensorSize;
-	Dimension size = new Dimension();
+	public Dimension size = new Dimension();
 
 	/**
 	 * Returns the default padding for nodes.

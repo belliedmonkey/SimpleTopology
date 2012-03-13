@@ -1,142 +1,231 @@
 <svg  onload='Init(evt)'   onmousedown='Grab(evt)'    onmousemove='Drag(evt)'
    onmouseup='Drop(evt)'  contentScriptType="text/ecmascript" xmlns:xlink="http://www.w3.org/1999/xlink" zoomAndPan="magnify" contentStyleType="text/css" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" version="1.0">
-<script xlink:actuate="onLoad" xlink:type="simple" xlink:show="other" type="text/javascript" xmlns:xlink="http://www.w3.org/1999/xlink"><![CDATA[
-      var SVGDocument = null;
-      var SVGRoot = null;
-      var TrueCoords = null;
-      var GrabPoint = null;
-      var BackDrop = null;
-      var DragTarget = null;
+<script type="text/javascript">
+<![CDATA[
+var SVGDocument = null;
+var SVGRoot = null;
+var TrueCoords = null;
+var GrabPoint = null;
+var BackDrop = null;
+var DragTarget = null;
 
-      function Init(evt)
-      {
-         SVGDocument = evt.target.ownerDocument;
-         SVGRoot = SVGDocument.documentElement;
-
-         // these svg points hold x and y values...
-         //    very handy, but they do not display on the screen (just so you know)
-         TrueCoords = SVGRoot.createSVGPoint();
-         GrabPoint = SVGRoot.createSVGPoint();
-
-         // this will serve as the canvas over which items are dragged.
-         //    having the drag events occur on the mousemove over a backdrop
-         //    (instead of the dragged element) prevents the dragged element
-         //    from being inadvertantly dropped when the mouse is moved rapidly
-         BackDrop = SVGDocument.getElementById('BackDrop');
-      }
-
-      function Grab(evt)
-      {
-         // find out which element we moused down on
-         var targetElement = evt.target;
-
-         // you cannot drag the background itself, so ignore any attempts to mouse down on it
-         if ( BackDrop != targetElement )
-         {
-            //set the item moused down on as the element to be dragged
-            DragTarget = targetElement.parentNode.parentNode;
-
-            // move this element to the "top" of the display, so it is (almost)
-            //    always over other elements (exception: in this case, elements that are
-            //    "in the folder" (children of the folder group) with only maintain
-            //    hierarchy within that group
-            DragTarget.parentNode.appendChild( DragTarget );
-
-            // turn off all pointer events to the dragged element, this does 2 things:
-            //    1) allows us to drag text elements without selecting the text
-            //    2) allows us to find out where the dragged element is dropped (see Drop)
-            DragTarget.setAttributeNS(null, 'pointer-events', 'none');
-
-            // we need to find the current position and translation of the grabbed element,
-            //    so that we only apply the differential between the current location
-            //    and the new location
-            var transMatrix = DragTarget.getCTM();
-            GrabPoint.x = TrueCoords.x - Number(transMatrix.e);
-            GrabPoint.y = TrueCoords.y - Number(transMatrix.f);
-
-         }
-      };
+document.oncontextmenu=RightMouseDown;
+document.onmousedown = mouseDown; 
+document.onmouseup = mouseup; 
 
 
-      function Drag(evt)
-      {
-         // account for zooming and panning
-         GetTrueCoords(evt);
 
-         // if we don't currently have an element in tow, don't do anything
-         if (DragTarget)
-         {
-         
-         		var width = DragTarget.getAttribute('width');
-         		var height = DragTarget.getAttribute('height');
-            // account for the offset between the element's origin and the
-            //    exact place we grabbed it... this way, the drag will look more natural
-            var newX = TrueCoords.x - GrabPoint.x;
-            var newY = TrueCoords.y - GrabPoint.y;
+function zoomSvg(width,height) {
+	SVGRoot.setAttribute("viewBox","0 0 "+width+" "+ height);
+	SVGRoot.setAttributeNS("http://www.w3.org/2000/svg","width",width);
+	SVGRoot.setAttributeNS("http://www.w3.org/2000/svg","height",height);
+}
 
-            // apply a new tranform translation to the dragged element, to display
-            //    it in its new location
-            DragTarget.setAttribute('transform', 'translate(' + newX + ',' + newY + ')');
-            	var lines = SVGDocument.getElementsByTagName('line');
-						for (var i=0; i<lines.length; i++) {
-							var line =  lines[i];
-							var sourceId = line.getAttribute('source');
-							var targetId = line.getAttribute('target');
-							if (sourceId == DragTarget.getAttribute('id')) {
-								line.setAttribute('x1',newX+width/2);
-								line.setAttribute('y1',newY+parseInt(height, 10));
-							}
-							if (targetId == DragTarget.getAttribute('id')) {
-								line.setAttribute('x2',newX+width/2);
-								line.setAttribute('y2',newY);
-							}
-            }
-         }
-      };
+function mouseup(e) {
+    if (e.which==3) {//righClick
+			var tips = SVGDocument.getElementById('tips');
+			if (tips != null) {
+				SVGRoot.removeChild(tips);
+			}
+    }
+      
+}
 
+function mouseDown(e) {
+    if (e.which==3) {//righClick
+        var node = e.target;
+        var parent = node.parentNode;
+        details = parent.getAttribute("node_detail");
+        if (details != null) {
+        	showTips(details, parent);
+        }
+    }  
+}
 
-      function Drop(evt)
-      {
-         // if we aren't currently dragging an element, don't do anything
-         if ( DragTarget )
-         {
-            // since the element currently being dragged has its pointer-events turned off,
-            //    we are afforded the opportunity to find out the element it's being dropped on
-            var targetElement = evt.target;
-
-            // turn the pointer-events back on, so we can grab this item later
-            DragTarget.setAttributeNS(null, 'pointer-events', 'all');
-            if ( 'Folder' == targetElement.parentNode.id )
-            {
-               // if the dragged element is dropped on an element that is a child
-               //    of the folder group, it is inserted as a child of that group
-               targetElement.parentNode.appendChild( DragTarget );
-               alert(DragTarget.id + ' has been dropped into a folder, and has been inserted as a child of the containing group.');
-            }
-            else
-            {
-               // for this example, you cannot drag an item out of the folder once it's in there;
-               //    however, you could just as easily do so here
-               //alert(DragTarget.id + ' has been dropped on top of ' + targetElement.id);
-            }
-
-            // set the global variable to null, so nothing will be dragged until we
-            //    grab the next element
-            DragTarget = null;
-         }
-      };
-
-
-      function GetTrueCoords(evt)
-      {
-         // find the current zoom level and pan setting, and adjust the reported
-         //    mouse position accordingly
-         var newScale = SVGRoot.currentScale;
-         var translation = SVGRoot.currentTranslate;
-         TrueCoords.x = (evt.clientX - translation.x)/newScale;
-         TrueCoords.y = (evt.clientY - translation.y)/newScale;
-      };
+function showTips(details, parent) {
+	var group = SVGDocument.createElementNS("http://www.w3.org/2000/svg","g");
+	var rect = SVGDocument.createElementNS("http://www.w3.org/2000/svg","rect");
+	group.setAttribute("id","tips");
+	rect.setAttribute("rx","5");
+	rect.setAttribute("ry","5");
+	rect.setAttribute("x","0");
+	rect.setAttribute("y","0");
+	rect.setAttribute("width","300");
+	rect.setAttribute("height","50");
+	rect.setAttribute("style","visibility:hidden");
+	var text = SVGDocument.createElementNS("http://www.w3.org/2000/svg","text");
+	text.setAttribute("x","12");
+	text.setAttribute("y","12");
+	text.setAttribute("style", "fill: #414141; font-size: 12px; font-family:arial; visibility: visible");
+	var detailList = details.split('%%');
+	var xdy = 0;
+	var maxLength = 0;
+	for (var i = 0; i <detailList.length; i++) {
+		if (detailList[i].length > maxLength) {
+			maxLength = detailList[i].length;
+		}
+		var tspan = SVGDocument.createElementNS("http://www.w3.org/2000/svg","tspan");
+		tspan.setAttribute("x","0");
+		tspan.setAttribute("dy",xdy);
+		var txtNode = SVGDocument.createTextNode(detailList[i]);
+		tspan.appendChild(txtNode);
+		text.appendChild(tspan);
+		xdy = xdy + 13;
+	}
+	if (maxLength*12 > 300) {
+		rect.setAttribute("width","" + maxLength*7);
+	}
+  rect.setAttribute("style", "fill: #b1c5cf; visibility: visible");
+  group.setAttribute("style", "fill: #b1c5cf; visibility: visible");
+  group.appendChild(rect);
+  group.appendChild(text);
+  group.setAttribute("transform",parent.parentNode.getAttribute("transform"));
+  SVGRoot.appendChild(group);
+}
 
 
-   ]]></script>
+function RightMouseDown() { return false; }
+
+
+
+function Init(evt) {
+
+
+	SVGDocument = evt.target.ownerDocument;
+	SVGRoot = SVGDocument.documentElement;
+
+	TrueCoords = SVGRoot.createSVGPoint();
+	GrabPoint = SVGRoot.createSVGPoint();
+
+	BackDrop = SVGDocument.getElementById('BackDrop');
+	
+	var parentWnd = window.parent;
+	var svgNode = parentWnd.document.getElementById("svg");
+	var width = svgNode.getAttribute("width");
+	var height = svgNode.getAttribute("height");
+	SVGRoot.setAttribute("transform","scale(0.5,1)");
+	SVGDocument.svgWnd = window;
+	var svgPanel = parentWnd.Ext.getCmp("svgPanel");
+	var svgWindow = parentWnd.Ext.getCmp('svgWindow');
+	var svgWidth = SVGRoot.getAttribute("width");
+	var svgHeight = SVGRoot.getAttribute("height");
+	if (svgWindow.getWidth() > svgWidth) {
+		svgPanel.setWidth(svgWindow.getWidth());
+	} else {
+		svgPanel.setWidth(svgWidth);
+	}
+	if (svgWindow.getHeight() > svgHeight) {
+		svgPanel.setHeight(svgWindow.getHeight());
+	} else {
+		svgPanel.setHeight(svgHeight);
+	}
+	svgWindow.syncSize();
+}
+
+
+function Grab(evt) {
+if (evt.which==3) {
+return;
+}
+
+	var targetElement = evt.target;
+
+	if (BackDrop != targetElement) {
+
+		DragTarget = targetElement.parentNode.parentNode;
+
+		DragTarget.parentNode.appendChild(DragTarget);
+
+		DragTarget.setAttributeNS(null, 'pointer-events', 'none');
+
+		var transMatrix = DragTarget.getCTM();
+		GrabPoint.x = TrueCoords.x - Number(transMatrix.e);
+		GrabPoint.y = TrueCoords.y - Number(transMatrix.f);
+
+	}
+};
+
+function Drag(evt) {
+if (evt.which==3) {
+return;
+}
+
+	GetTrueCoords(evt);
+
+	if (DragTarget) {
+
+		var width = DragTarget.getAttribute('width');
+		var height = DragTarget.getAttribute('height');
+
+		var newX = TrueCoords.x - GrabPoint.x;
+		var newY = TrueCoords.y - GrabPoint.y;
+
+		DragTarget.setAttribute('transform', 'translate(' + newX + ',' + newY
+				+ ')');
+		var lines = SVGDocument.getElementsByTagName('line');
+		for ( var i = 0; i < lines.length; i++) {
+			var line = lines[i];
+			var sourceId = line.getAttribute('source');
+			var targetId = line.getAttribute('target');
+			if (sourceId == DragTarget.getAttribute('id')) {
+				line.setAttribute('x1', newX + width / 2);
+				line.setAttribute('y1', newY + parseInt(height, 10));
+			}
+			if (targetId == DragTarget.getAttribute('id')) {
+				line.setAttribute('x2', newX + width / 2);
+				line.setAttribute('y2', newY);
+			}
+		}
+	}
+};
+
+function Drop(evt) {
+if (evt.which==3) {
+return;
+}
+
+	if (DragTarget) {
+
+		var targetElement = evt.target;
+
+		DragTarget.setAttributeNS(null, 'pointer-events', 'all');
+		if ('Folder' == targetElement.parentNode.id) {
+
+			targetElement.parentNode.appendChild(DragTarget);
+			alert(DragTarget.id
+					+ ' has been dropped into a folder, and has been inserted as a child of the containing group.');
+		} else {
+
+		}
+
+		DragTarget = null;
+	}
+};
+
+function GetTrueCoords(evt) {
+
+	var newScale = SVGRoot.currentScale;
+	var translation = SVGRoot.currentTranslate;
+	TrueCoords.x = (evt.clientX - translation.x) / newScale;
+	TrueCoords.y = (evt.clientY - translation.y) / newScale;
+};
+
+
+
+function resizeText() {
+	var txts = document.getElementsByTagName("text");
+	
+	for (var i = 0; i < txts.length; i++) {
+		var txt = txts[i].textContent; 
+		var maxLen = txts[i].getAttribute('MaxLength');
+		if (txt.length >= maxLen) {
+			txt = txt.substring(0,maxLen-1);
+			txt = txt + '...';
+		}
+		txts[i].textContent = txt;
+	}
+}
+
+]]>
+</script>	
 </svg>

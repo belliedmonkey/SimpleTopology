@@ -23,7 +23,6 @@ public class DubboProviderTopoTest {
 		long id15 = graph.addNode(graph.newNodeByNodeType(DUBBO_NODE_TYPE.CONSUMER));
 		long id21 = graph.addNode(graph.newNodeByNodeType(DUBBO_NODE_TYPE.CI));
 		long id22 = graph.addNode(graph.newNodeByNodeType(DUBBO_NODE_TYPE.CI));
-		
 		graph.addRelationship(new TopoRelationship(id1,id21));
 		graph.addRelationship(new TopoRelationship(id1,id22));
 		graph.addRelationship(new TopoRelationship(id21,id11));
